@@ -1,3 +1,5 @@
+import { API_BASE_URL } from '../config/env';
+
 const request = async (url, options = {}) => {
   const token = localStorage.getItem('escapeverse_token');
 
@@ -7,7 +9,9 @@ const request = async (url, options = {}) => {
     ...options.headers
   };
 
-  const response = await fetch(url, {
+  const endpoint = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+
+  const response = await fetch(endpoint, {
     ...options,
     headers
   });

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import toast from 'react-hot-toast';
+import { SOCKET_URL } from '../config/env';
 
 const SocketContext = createContext(null);
 
@@ -9,8 +10,9 @@ export const SocketProvider = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    // Socket connection URL (defaults to window origin / proxied)
-    const socketInstance = io(window.location.origin, {
+    // Socket connection URL (defaults to Render backend or window.location.origin)
+    const targetUrl = SOCKET_URL || window.location.origin;
+    const socketInstance = io(targetUrl, {
       transports: ['websocket', 'polling'],
       reconnectionAttempts: 5,
       reconnectionDelay: 1000
