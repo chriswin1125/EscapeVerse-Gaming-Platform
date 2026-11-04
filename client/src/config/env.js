@@ -1,19 +1,27 @@
 // API and Socket server endpoints
 // In development, empty string uses Vite's proxy (/api -> http://127.0.0.1:5500)
-// In production on Vercel, set VITE_API_URL to your Render backend URL (e.g., https://escapeverse-backend.onrender.com)
+// In production on Vercel, automatically connects to the live Render backend:
+// https://escapeverse-gaming-platform.onrender.com
+
+const PRODUCTION_BACKEND_URL = 'https://escapeverse-gaming-platform.onrender.com';
 
 const getBaseUrl = () => {
-  const envUrl = import.meta.env.VITE_API_URL;
-  if (envUrl) {
-    // Remove trailing slash if present
-    return envUrl.replace(/\/+$/, '');
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL.replace(/\/+$/, '');
   }
-  return '';
+  // If running locally, use relative path so Vite proxy handles it
+  if (
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ) {
+    return '';
+  }
+  // Default to live Render backend in production
+  return PRODUCTION_BACKEND_URL;
 };
 
 export const API_BASE_URL = getBaseUrl();
 
 export const SOCKET_URL =
   import.meta.env.VITE_SOCKET_URL?.replace(/\/+$/, '') ||
-  API_BASE_URL ||
-  (typeof window !== 'undefined' ? window.location.origin : '');
+  (API_BASE_URL ? API_BASE_URL : PRODUCTION_BACKEND_URL);

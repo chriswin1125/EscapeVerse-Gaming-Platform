@@ -17,6 +17,7 @@ export const setupSocketServer = (server, clientUrl) => {
           origin === clientUrl ||
           origin.includes('localhost') ||
           origin.includes('127.0.0.1') ||
+          origin.includes('escape-verse-gaming.vercel.app') ||
           origin.endsWith('.vercel.app') ||
           origin.endsWith('.onrender.com')
         ) {
