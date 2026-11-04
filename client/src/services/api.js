@@ -12,9 +12,17 @@ const request = async (url, options = {}) => {
     headers
   });
 
-  const data = await response.json();
+  const contentType = response.headers.get('content-type') || '';
+  let data;
+  if (contentType.includes('application/json')) {
+    data = await response.json();
+  } else {
+    const rawText = await response.text();
+    const clean = rawText.replace(/<[^>]*>/g, '').trim().slice(0, 120);
+    throw new Error(clean || `Server error (${response.status})`);
+  }
 
-  if (!response.ok) {
+  if (!response.ok || data.success === false) {
     throw new Error(data.message || 'API request failed');
   }
 

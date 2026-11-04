@@ -8,6 +8,16 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(() => localStorage.getItem('escapeverse_token') || null);
   const [loading, setLoading] = useState(true);
 
+  const safeJson = async (res) => {
+    const contentType = res.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      return await res.json();
+    }
+    const raw = await res.text();
+    const clean = raw.replace(/<[^>]*>/g, '').trim().slice(0, 120);
+    throw new Error(clean || `Server communication error (${res.status})`);
+  };
+
   // Fetch current user if token exists
   useEffect(() => {
     const fetchMe = async () => {
@@ -22,7 +32,7 @@ export const AuthProvider = ({ children }) => {
             Authorization: `Bearer ${token}`
           }
         });
-        const data = await res.json();
+        const data = await safeJson(res);
 
         if (data.success && data.user) {
           setUser(data.user);
@@ -49,9 +59,9 @@ export const AuthProvider = ({ children }) => {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email: email.trim().toLowerCase(), password })
       });
-      const data = await res.json();
+      const data = await safeJson(res);
 
       if (!data.success) {
         throw new Error(data.message || 'Login failed');
@@ -63,7 +73,7 @@ export const AuthProvider = ({ children }) => {
       toast.success(`Welcome back, Agent ${data.user.username}!`);
       return data.user;
     } catch (err) {
-      toast.error(err.message);
+      toast.error(err.message || 'Login failed');
       throw err;
     }
   };
@@ -73,9 +83,9 @@ export const AuthProvider = ({ children }) => {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, email, password, avatar })
+        body: JSON.stringify({ username: username.trim(), email: email.trim().toLowerCase(), password, avatar })
       });
-      const data = await res.json();
+      const data = await safeJson(res);
 
       if (!data.success) {
         throw new Error(data.message || 'Registration failed');
@@ -87,7 +97,7 @@ export const AuthProvider = ({ children }) => {
       toast.success(`Welcome to EscapeVerse, ${data.user.username}!`);
       return data.user;
     } catch (err) {
-      toast.error(err.message);
+      toast.error(err.message || 'Registration failed');
       throw err;
     }
   };
